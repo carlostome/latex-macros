@@ -1,0 +1,276 @@
+% \usepackage{amssymb}          % \square
+% \usepackage{amsthm}           % \newtheorem
+% \usepackage{bbold}            % \mathbb
+% \usepackage{enumitem}         % \newlist
+% \usepackage{glossaries-extra} % load after hyperref, \newacronym, \newglossaryentry, \glsfmtshort, \glsfmttext
+% \usepackage{mathtools}        % \DeclarePairedDelimiter, \prescript, \newmcodes@ (from amsopn via amsmath)
+% \usepackage{todonotes}        % \todo
+
+% Internal dependencies
+\usepackage{xparse} % argument type `G'
+\usepackage{xspace} % \xspace
+\usepackage{zref}   % \zref@extract
+
+% Reexports
+\usepackage{myabbreviations} % \DeclareAbbreviation, \ie
+\usepackage{mycompounds}     % \hyp, \spword
+
+\makeatletter
+\NewDocumentCommand\dependson{mom}{%
+  \@ifpackageloaded{#1}{%
+    #3
+  }{%
+    \IfValueTF{#2}{
+      \PackageWarningNoLine{macros}{Load package `#1' for #2}
+    }{%
+      \PackageWarningNoLine{macros}{Package `#1' needed for some macros but missing}
+    }
+  }
+}
+\NewDocumentCommand\dependsoncommand{mom}{%
+  \ifcsname #1\endcsname
+    #3
+  \else
+    \IfValueTF{#2}{
+      \PackageWarningNoLine{macros}{Define command `#1' for #2}
+    }{%
+      \PackageWarningNoLine{macros}{Command `#1' needed for some macros but missing}
+    }
+  \fi
+}
+\makeatother
+
+\ExplSyntaxOn
+\NewDocumentCommand\MakeUppercaseFirst{m}{%
+  \text_titlecase_first:n{#1}
+}
+\ExplSyntaxOff
+
+\ProvideDocumentCommand{\grantsponsor}{mmm}{% ID NAME URL
+  #1%
+}
+\ProvideDocumentCommand{\grantnum}{omm}{% [URL] ID NUMBER
+  #3%
+  \IfValueT{#1}{%
+    \space(\url{#1})%
+  }%
+}
+\def\acknowledgementsname{Acknowledgements}
+\ifcsname acks\endcsname
+  % \acknowledgements environment already defined, do not define
+\else
+  \newenvironment{acks}{%
+    \section*{\acknowledgementsname}
+    \addcontentsline{toc}{section}{\acknowledgementsname}
+  }{%
+    % empty
+  }
+\fi
+
+\def\artifactsavailabilityname{Data Availability Statement}
+\newenvironment{artifacts}{%
+  \section*{\artifactsavailabilityname}
+  \addcontentsline{toc}{section}{\artifactsavailabilityname}
+}{%
+  % empty
+}
+
+\NewDocumentCommand{\limpl}{}{\Rightarrow}
+\def\implies{\limpl}
+
+%= % propositional equality (usually we mean this)
+\NewDocumentCommand{\defeq}{}{\equiv} % definitional equality (more difficult to describe)
+\NewDocumentCommand{\thyeq}{}{\sim} % axiomatic equality (of an equational theory, in a quotient, any congruence relation)
+\let\quoeq\thyeq
+\let\holeone\hole
+\NewDocumentCommand{\holetwo}{}{{+}}
+\NewDocumentCommand{\mcvar}{m}{\mathit{#1}} % multi-character variable
+
+\dependson{bbold}[\string\Bool,\string\Nat,\string\Three]{%
+  \NewDocumentCommand{\Bool}{}{\mathbb{2}}
+  \NewDocumentCommand{\Nat}{}{\mathbb{N}}
+  \NewDocumentCommand{\Three}{}{\mathbb{3}}
+}
+\NewDocumentCommand{\To}{}{\Rightarrow}
+\NewDocumentCommand{\LLP}{m}{\prescript{\boxdiag}{}{#1}}
+\NewDocumentCommand{\RLP}{m}{{#1}^{\boxdiag}}
+\NewDocumentCommand{\LOP}{m}{\prescript{\bot}{}{#1}}
+\NewDocumentCommand{\ROP}{m}{{#1}^{\bot}}
+\dependson{mathtools}[\string\Box]{%
+  \dependson{amssymb}[\string\Box]{%
+    \let\oldBox\Box\let\Box\relax\DeclareMathOperator{\Box}{\square}
+  }
+}
+
+\dependson{mathtools}[\string\eval]{%
+  \let\evallbracket\llbracket
+  \let\evalrbracket\rrbracket
+  \DeclarePairedDelimiter\eval\evallbracket\evalrbracket
+}
+
+\dependson{mathtools}[\string\pr, \string\copr]{%
+  \DeclarePairedDelimiterX\pr[2]{\lparen}{\rparen}{#1,#2}
+  \DeclarePairedDelimiterX\copr[2]{\lbrack}{\rbrack}{#1,#2}
+}
+
+\dependson{mathtools}[\string\Codiscr,\string\Discr,\string\Forget]{%
+  \DeclareMathOperator{\Codiscr}{\nabla}
+  \DeclareMathOperator{\Discr}{\Delta}
+  \NewDocumentCommand{\Forget}{o}{%
+    \IfNoValueTF{#1}{%
+      \operatorname{U}
+    }{%
+      \operatorname{U}_{#1}
+    }%
+  }
+}
+
+% TODO: factor out in myamsthm.sty
+% --- 8< ---
+\NewDocumentCommand{\newtheoremlist}{mo}{%
+  \IfValueTF{#2}{%
+    \newlist{#1list}{enumerate}[#2][#1]
+  }{%
+    \newlist{#1list}{enumerate}[#1][#1]
+  }
+}
+\makeatletter
+\let\orignewtheorem\newtheorem
+\DeclareDocumentCommand{\newtheorem}{smomm}{%
+  \IfBooleanTF{#1}{%
+    \IfValueT{#3}{%
+      \GenericWarning{%
+        \string\newtheorem (macros)
+      }{%
+        Ignoring shared counter (#3) passed to starred version of
+        \string\newtheorem
+      }
+    }
+    \orignewtheorem*{#2}{#4}
+    \newtheoremlist{#2}
+  }{%
+    \IfValueTF{#3}{%
+      \orignewtheorem{#2}[#3]{#4}
+      \newtheoremlist{#2}[#3]
+    }{%
+      \orignewtheorem{#2}{#4}
+      \newtheoremlist{#2}
+    }
+  }
+  \@ifpackageloaded{cleveref}{
+    \crefname{#2}{#4}{#5}
+    \Crefname{#2}{\expandafter\MakeUppercaseFirst{#4}}{\expandafter\MakeUppercaseFirst{#5}}
+  }{}
+}
+\makeatother
+% --- >8 ---
+
+% TODO: factor out in myglossaries.sty
+% --- 8< ---
+\let\orignewacronym\newacronym
+\DeclareDocumentCommand{\newacronym}{mmm}{%
+  \dependson{glossaries-extra}{%
+    \expandafter\NewDocumentCommand\expandafter{\csname#1\endcsname}{}{\glsfmtshort{#2}\xspace}
+    \expandafter\NewDocumentCommand\expandafter{\csname#1s\endcsname}{}{\glsentryshortpl{#2}\xspace}
+    \orignewacronym{#2}{#2}{#3}
+  }
+}
+% --- >8 ---
+
+%\DeclareSymbolFont{system}{T1}{cmr}{m}{sc}
+\makeatletter
+\def\system@font{\rmfamily}
+\def\systemfont{\system@font}
+\NewDocumentCommand{\DeclareSystem}{mmm}{%
+  \expandafter\DeclareRobustCommand\expandafter{\csname#1\endcsname}{{\system@font\glsfmttext{#1}}\xspace}
+  \expandafter\DeclareRobustCommand\expandafter{\csname#1s\endcsname}{{\system@font\glsentryplural{#1}}\xspace}
+  \newglossaryentry{#1}{%
+    name={#2},
+    description={#3}
+  }
+}
+\makeatother
+
+\NewDocumentCommand{\romannum}{m}{\romannumeral #1}
+\NewDocumentCommand{\Romannum}{m}{\MakeUppercase{\romannumeral #1}}
+
+% XXX: use \newacronym or \DeclareSystem for some of these
+\NewDocumentCommand{\Agda}{}{\textsc{Agda}\xspace}
+\NewDocumentCommand{\Coq}{}{\textsc{Coq}\xspace}
+\NewDocumentCommand{\Haskell}{}{\textsc{Haskell}\xspace}
+\NewDocumentCommand{\ML}{}{\textsc{ML}\xspace}
+\NewDocumentCommand{\PureScript}{}{\textsc{PureScript}\xspace}
+\NewDocumentCommand{\CIC}{}{CIC\xspace}
+\NewDocumentCommand{\CTT}{}{Cubical Type Theory\xspace}
+\NewDocumentCommand{\cwf}{}{cwf\xspace}
+\NewDocumentCommand{\CZF}{}{CZF\xspace}
+\NewDocumentCommand{\gat}{}{GAT\xspace}
+\NewDocumentCommand{\HoTT}{}{HoTT\xspace}
+\NewDocumentCommand{\IZF}{}{IZF\xspace}
+\NewDocumentCommand{\MLTT}{}{MLTT\xspace}
+\NewDocumentCommand{\nLab}{}{\textit{n}Lab\xspace}
+\NewDocumentCommand{\Zenodo}{}{Zenodo\xspace}
+\newacronym{DOM}{DOM}{Document Object Model}
+\newacronym{IFC}{IFC}{Information\hyp{}Flow Control}
+\newacronym{NbE}{NbE}{Normalization by Evaluation}
+\newacronym{OPE}{OPE}{Order\hyp{}preserving Embedding}
+\NewDocumentCommand{\ZF}{}{ZF\xspace}
+\NewDocumentCommand{\ZFC}{}{ZFC\xspace}
+
+% TODO: factor out in myenumitem.sty
+% --- 8< ---
+\makeatletter
+\let\orignewlist\newlist
+\def\label@enumerate{\arabic*.}
+\def\ref@enumerate{\arabic*}
+\DeclareRobustCommand{\perhaps}[1]{#1}
+\NewDocumentCommand{\@itemref}{mm}{%
+  \begingroup % scope redefinition of \perhaps
+  \renewcommand\perhaps[1]{}%
+  \csname #1ref\endcsname{#2}%
+  \endgroup
+}
+\def\itemref{\@itemref{}}
+\def\itemcref{\@itemref{c}}
+\def\itemCref{\@itemref{C}}
+\DeclareDocumentCommand\newlist{mmoo}{% environment-name list-type parent-counter reference-type
+  \dependson{enumitem}{%
+    \ifcsname label@#2\endcsname
+      \ifcsname ref@#2\endcsname
+        \orignewlist{#1}{#2}{1}
+        \orignewlist{#1*}{#2*}{1}
+        \IfValueTF{#3}{
+          \setlist[#1,#1*]{label=\csname label@#2\endcsname,ref=\perhaps{\csname the#3\endcsname.}\csname ref@#2\endcsname}
+        }{
+          \setlist[#1,#1*]{label=\csname label@#2\endcsname.,ref=\csname ref@#2\endcsname}
+        }
+        \@ifpackageloaded{cleveref}{
+          \IfValueTF{#4}{
+            \crefalias{#1i}{#4}
+            \crefalias{#1*i}{#4}
+          }{
+            \crefalias{#1i}{#1}
+            \crefalias{#1*i}{#1}
+          }
+        }{}
+      \else
+        \GenericError{}{\string\newlist (macros)}{\string\ref@#2 undefined}{}
+      \fi
+    \else
+      \GenericError{}{\string\newlist (macros)}{\string\label@#2 undefined}{}
+    \fi
+  }
+}
+\makeatother
+% --- >8 ---
+
+% TODO: factor out in mytodonotes.sty
+% --- 8< ---
+% defines \todo#2 with color #3, starred version defines the command
+% such that todo items created with it are not listed by \listoftodos
+\NewDocumentCommand{\NewTodo}{smm}{
+  \expandafter\NewDocumentCommand\expandafter{\csname todo#2\endcsname}{om}{%
+    \todo[\IfBooleanT{#1}{nolist},color=#3,\IfValueT{##1}{##1}]{##2}%
+  }
+}
+% --- >8 ---
