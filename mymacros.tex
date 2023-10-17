@@ -136,7 +136,7 @@
 }
 \makeatletter
 \let\orignewtheorem\newtheorem
-\DeclareDocumentCommand{\newtheorem}{smomm}{%
+\DeclareDocumentCommand{\newtheorem}{smommo}{%
   \IfBooleanTF{#1}{%
     \IfValueT{#3}{%
       \GenericWarning{%
@@ -150,10 +150,23 @@
     \newtheoremlist{#2}
   }{%
     \IfValueTF{#3}{%
-      \orignewtheorem{#2}[#3]{#4}
+      \IfValueTF{#6}{%
+        \GenericError{%
+          \string\newtheorem (macros)
+        }{%
+          \string\newtheorem optional arguments are mutually
+          exclusive (see amsthm.sty documentation)
+        }
+      }{%
+        \orignewtheorem{#2}[#3]{#4}
+      }
       \newtheoremlist{#2}[#3]
     }{%
-      \orignewtheorem{#2}{#4}
+      \IfValueTF{#6}{%
+        \orignewtheorem{#2}{#4}[#6]
+      }{%
+        \orignewtheorem{#2}{#4}
+      }
       \newtheoremlist{#2}
     }
   }
