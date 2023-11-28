@@ -2,7 +2,6 @@
 % \usepackage{amsthm}           % \newtheorem
 % \usepackage{bbold}            % \mathbb
 % \usepackage{enumitem}         % \newlist
-% \usepackage{glossaries-extra} % load after hyperref, \newacronym, \newglossaryentry, \glsfmtshort, \glsfmttext
 % \usepackage{mathtools}        % \DeclarePairedDelimiter, \prescript, \newmcodes@ (from amsopn via amsmath)
 % \usepackage{todonotes}        % \todo
 
@@ -178,36 +177,9 @@
 \makeatother
 % --- >8 ---
 
-% TODO: factor out in myglossaries.sty
-% --- 8< ---
-\let\orignewacronym\newacronym
-\DeclareDocumentCommand{\newacronym}{mmm}{%
-  \dependson{glossaries-extra}{%
-    \expandafter\NewDocumentCommand\expandafter{\csname#1\endcsname}{}{\glsfmtshort{#2}\xspace}
-    \expandafter\NewDocumentCommand\expandafter{\csname#1s\endcsname}{}{\glsentryshortpl{#2}\xspace}
-    \orignewacronym{#2}{#2}{#3}
-  }
-}
-% --- >8 ---
-
-%\DeclareSymbolFont{system}{T1}{cmr}{m}{sc}
-\makeatletter
-\def\system@font{\rmfamily}
-\def\systemfont{\system@font}
-\NewDocumentCommand{\DeclareSystem}{mmm}{%
-  \expandafter\DeclareRobustCommand\expandafter{\csname#1\endcsname}{{\system@font\glsfmttext{#1}}\xspace}
-  \expandafter\DeclareRobustCommand\expandafter{\csname#1s\endcsname}{{\system@font\glsentryplural{#1}}\xspace}
-  \newglossaryentry{#1}{%
-    name={#2},
-    description={#3}
-  }
-}
-\makeatother
-
 \NewDocumentCommand{\romannum}{m}{\romannumeral #1}
 \NewDocumentCommand{\Romannum}{m}{\MakeUppercase{\romannumeral #1}}
 
-% XXX: use \newacronym or \DeclareSystem for some of these
 \NewDocumentCommand{\Agda}{}{\textsc{Agda}\xspace}
 \NewDocumentCommand{\Coq}{}{\textsc{Coq}\xspace}
 \NewDocumentCommand{\Haskell}{}{\textsc{Haskell}\xspace}
@@ -223,10 +195,11 @@
 \NewDocumentCommand{\MLTT}{}{MLTT\xspace}
 \NewDocumentCommand{\nLab}{}{\textit{n}Lab\xspace}
 \NewDocumentCommand{\Zenodo}{}{Zenodo\xspace}
-\newacronym{DOM}{DOM}{Document Object Model}
-\newacronym{IFC}{IFC}{Information\hyp{}Flow Control}
-\newacronym{NbE}{NbE}{Normalization by Evaluation}
-\newacronym{OPE}{OPE}{Order\hyp{}preserving Embedding}
+\NewDocumentCommand{\DOM}{}{DOM\xspace}
+\NewDocumentCommand{\IFC}{}{IFC\xspace}
+\NewDocumentCommand{\NbE}{}{NbE\xspace}
+\NewDocumentCommand{\OPE}{}{OPE\xspace}
+\NewDocumentCommand{\OPEs}{}{OPEs\xspace}
 \NewDocumentCommand{\ZF}{}{ZF\xspace}
 \NewDocumentCommand{\ZFC}{}{ZFC\xspace}
 
