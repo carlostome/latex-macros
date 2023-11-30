@@ -177,6 +177,16 @@
 \makeatother
 % --- >8 ---
 
+%\DeclareSymbolFont{system}{T1}{cmr}{m}{sc}
+\makeatletter
+\def\system@font{\rmfamily}
+\def\systemfont{\system@font}
+\NewDocumentCommand{\DeclareSystem}{mmm}{%
+  \expandafter\DeclareRobustCommand\expandafter{\csname#1\endcsname}{\system@font{#1}\xspace}
+  \expandafter\DeclareRobustCommand\expandafter{\csname#1s\endcsname}{\system@font{#1}\xspace}
+}
+\makeatother
+
 \NewDocumentCommand{\romannum}{m}{\romannumeral #1}
 \NewDocumentCommand{\Romannum}{m}{\MakeUppercase{\romannumeral #1}}
 
